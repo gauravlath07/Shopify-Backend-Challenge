@@ -1,5 +1,6 @@
 import requests
 
+# Get the total number of pages that need to be iterated through
 orders=[]
 request_string = 'https://backend-challenge-fall-2017.herokuapp.com/orders.json'
 r = requests.get(request_string)
@@ -9,6 +10,7 @@ num_cookies = data['available_cookies']
 i=1
 unfulfilled_orders = []
 
+# Helper method for getting orders which have cookies
 def process_order(order):
     if order['fulfilled'] == True:
         return
@@ -22,38 +24,31 @@ def process_order(order):
             orders.append(temp_dict)
             return
 
+# Iterating through pages in the API and processing orders
 while i <= num_pages:
     temp_str = request_string+'?page='+str(i)
-    print temp_str
     r = requests.get(temp_str)
     data = r.json()
     for item in data['orders']:
         process_order(item)
-
     i += 1
 
-for item in orders:
-    print item
-print "---------"
+# Sort orders in decreasing number of cookies and increasing id number
 sorted_list = sorted(orders, key = lambda item: (item['num_cookies'], -item['id']), reverse=True)
-for item in sorted_list:
-    print item
-print "---------"
 
+# Process orders which can be done by the company
 for item in sorted_list:
     if item['num_cookies'] > num_cookies:
         unfulfilled_orders.append(item['id'])
-        print item
         continue
     else:
         num_cookies = num_cookies-item['num_cookies']
 
+# Build submission JSON structure
 submit_json = {}
 submit_json['remaining_cookies'] = num_cookies
 submit_json['unfulfilled_orders'] = unfulfilled_orders
-# print num_cookies
-# print num_unfulfilled
+
 print submit_json
-# for item in sorted_list:
-#     print item
+
 
